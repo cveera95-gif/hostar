@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+    stages {
+        stage ('git ') {
+            steps {
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'cveera95-gifs', url: 'https://github.com/cveera95-gif/hostar.git']])
+            }
+        }
+        stage ('artifact') {
+            steps {
+                sh 'mvn clean package'
+            }
+        } 
+        stage ('upload to s3') {
+            steps {
+                s3Upload consoleLogLevel: 'INFO', dontSetBuildResultOnFailure: false, dontWaitForConcurrentBuildCompletion: false, entries: [[bucket: 'hotstar-buk/', excludedFile: '', flatten: false, gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false, selectedRegion: 'ap-south-1', showDirectlyInBrowser: false, sourceFile: '**/*.war', storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE', profileName: 'hotstar-buk', userMetadata: []
+            }
+        }
+        stage ('image creation') {
+            steps {
+                sh 'docker rmi -f hot-img:v1 || true'
+                sh 'docker build -t hot-img:v1 .'
+            }
+        }
+        stage ('pusing image to docker hub') {
+            steps {
+                sh '''
+                docker tag hot-img:v1 $username/hot-img:v1
+                echo $password | docker login -u $username --password-stdin
+                docker push $username/hot-img:v1
+                '''
+            }
+        }
+        stage ('container running') {
+            steps {
+                sh '''
+                docker rm -f hot-cont1 || true
+                docker run -itd --name hot-cont1 -p 8086:8080 hot-img:v1
+                '''
+            }
+        }
+    }
+}
