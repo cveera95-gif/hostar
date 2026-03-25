@@ -18,7 +18,7 @@ spec:
         - name: cont1
           image: cveera95/img:v1
           ports:
-            - containerPort: 80
+            - containerPort: 8080
 
 
 ---
@@ -32,5 +32,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
   type: LoadBalancer
