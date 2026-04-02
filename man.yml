@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: cont1
-          image: cveera95/img:v1
+          image: cveera95/img1:v1
           ports:
             - containerPort: 8080
 
